@@ -36,8 +36,8 @@ jobs:
           --image hngregistry.azurecr.io/fastapi-app:latest \
           --cpu 1 --memory 1 \
           --registry-login-server hngregistry.azurecr.io \
-          --registry-username ${{ secrets.ACR_USERNAME }} \
-          --registry-password ${{ secrets.ACR_PASSWORD }} \
+          --registry-username $(az acr credential show --name hngregistry --query "username" -o tsv) \
+          --registry-password $(az acr credential show --name hngregistry --query "passwords[0].value" -o tsv) \
           --dns-name-label fastapi-app \
           --ports 8000 \
           --os-type Linux \
