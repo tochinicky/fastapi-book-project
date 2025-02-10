@@ -20,12 +20,12 @@ jobs:
 
       - name: Build and Push FastAPI Image
         run: |
-          docker build -t hngregistry.azurecr.io/fastapi-app:${{ github.sha }} .
-          docker push hngregistry.azurecr.io/fastapi-app:${{ github.sha }}
+          docker build -t hngregistry.azurecr.io/fastapi-app:latest .
+          docker push hngregistry.azurecr.io/fastapi-app:latest
       - name: Build and Push Nginx Image
         run: |
-          docker build -t hngregistry.azurecr.io/fastapi-nginx:{{ github.sha }} -f Dockerfile.nginx .
-          docker push hngregistry.azurecr.io/fastapi-nginx:${{ github.sha }}
+          docker build -t hngregistry.azurecr.io/fastapi-nginx:latest -f Dockerfile.nginx .
+          docker push hngregistry.azurecr.io/fastapi-nginx:latest
 
       - name: Deploy to Azure Container Instances
         run: | 
