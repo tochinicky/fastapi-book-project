@@ -24,7 +24,7 @@ jobs:
           docker push hngregistry.azurecr.io/fastapi-app:${{ github.sha }}
       - name: Build and Push Nginx Image
         run: |
-          docker build -t hngregistry.azurecr.io/fastapi-nginx:latest -f Dockerfile.nginx .
+          docker build -t hngregistry.azurecr.io/fastapi-nginx:{{ github.sha }} -f Dockerfile.nginx .
           docker push hngregistry.azurecr.io/fastapi-nginx:${{ github.sha }}
 
       - name: Deploy to Azure Container Instances
