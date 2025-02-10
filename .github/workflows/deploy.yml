@@ -34,6 +34,9 @@ jobs:
           az container create --resource-group az-StorageRg --name nginx-container \
             --image hngregistry.azurecr.io/fastapi-nginx:latest \
             --cpu 1 --memory 1 \
+            --registry-login-server hngregistry.azurecr.io \
+            --registry-username $(az acr credential show --name hngregistry --query "username" -o tsv) \
+            --registry-password $(az acr credential show --name hngregistry --query "passwords[0].value" -o tsv) \
             --dns-name-label mynginxproxy1234 --ports 80 \
             --os-type Linux
       - name: Deploy to Azure Container Instances
