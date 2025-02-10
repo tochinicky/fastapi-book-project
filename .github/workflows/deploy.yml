@@ -24,10 +24,10 @@ jobs:
           docker push hngregistry.azurecr.io/fastapi-app:${{ github.sha }}
 
       - name: Deploy to Azure Container Instances
-        run: |
+        run: | 
          az container create --resource-group az-StorageRg \
           --name fastapi-container \
-          --image hngregistry.azurecr.io/fastapi-app:latest \
+          --image hngregistry.azurecr.io/fastapi-app:${{ github.sha }} \
           --cpu 1 --memory 1 \
           --registry-login-server hngregistry.azurecr.io \
           --registry-username ${{ secrets.ACR_USERNAME }} \
