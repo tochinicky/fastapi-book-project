@@ -25,17 +25,17 @@ jobs:
 
       - name: Deploy to Azure Container Instances
         run: |
-          az container create --resource-group az-StorageRg \
-            --name fastapi-container \
-            --image hngregistry.azurecr.io/fastapi-app:latest \
-            --cpu 1 --memory 1 \
-            --registry-login-server hngregistry.azurecr.io \
-            --registry-username ${{ secrets.ACR_USERNAME }} \
-            --registry-password ${{ secrets.ACR_PASSWORD }} \
-            --dns-name-label fastapi-app \
-            --ports 8000 \
-            --os-type Linux \
-            --verbose --debug
+         az container create --resource-group az-StorageRg \
+          --name fastapi-container \
+          --image hngregistry.azurecr.io/fastapi-app:latest \
+          --cpu 1 --memory 1 \
+          --registry-login-server hngregistry.azurecr.io \
+          --registry-username ${{ secrets.ACR_USERNAME }} \
+          --registry-password ${{ secrets.ACR_PASSWORD }} \
+          --dns-name-label fastapi-app \
+          --ports 8000 \
+          --os-type Linux \
+          --restart-policy Always
       - name: Deploy Nginx to ACI
         run: |
           # Delete previous container if exists (optional)
