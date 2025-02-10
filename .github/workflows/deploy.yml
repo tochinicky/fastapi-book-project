@@ -27,6 +27,15 @@ jobs:
           docker build -t hngregistry.azurecr.io/fastapi-nginx:latest -f Dockerfile.nginx .
           docker push hngregistry.azurecr.io/fastapi-nginx:latest
 
+      - name: Deploy Nginx to ACI
+        run: |
+          # Delete previous container if exists (optional)
+          az container delete --name nginx-container --resource-group az-StorageRg --yes || true
+          az container create --resource-group az-StorageRg --name nginx-container \
+            --image hngregistry.azurecr.io/fastapi-nginx:latest \
+            --cpu 1 --memory 1 \
+            --dns-name-label mynginxproxy1234 --ports 80 \
+            --os-type Linux
       - name: Deploy to Azure Container Instances
         run: | 
          # Delete previous container if exists (optional)
@@ -42,12 +51,4 @@ jobs:
           --ports 8000 \
           --os-type Linux \
           --restart-policy Always
-      - name: Deploy Nginx to ACI
-        run: |
-          # Delete previous container if exists (optional)
-          az container delete --name nginx-container --resource-group az-StorageRg --yes || true
-          az container create --resource-group az-StorageRg --name nginx-container \
-            --image hngregistry.azurecr.io/fastapi-nginx:latest \
-            --cpu 1 --memory 1 \
-            --dns-name-label mynginxproxy1234 --ports 80 \
-            --os-type Linux
+    
