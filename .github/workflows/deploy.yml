@@ -34,7 +34,8 @@ jobs:
             --registry-password ${{ secrets.ACR_PASSWORD }} \
             --dns-name-label fastapi-app \
             --ports 8000 \
-            --os-type Linux
+            --os-type Linux \
+            --verbose --debug
       - name: Deploy Nginx to ACI
         run: |
           # Delete previous container if exists (optional)
