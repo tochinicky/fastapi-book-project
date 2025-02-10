@@ -42,4 +42,5 @@ jobs:
           az container create --resource-group az-StorageRg --name nginx-container \
             --image hngregistry.azurecr.io/fastapi-nginx:latest \
             --cpu 1 --memory 1 \
-            --dns-name-label mynginxproxy1234 --ports 80
+            --dns-name-label mynginxproxy1234 --ports 80 \
+            --os-type Linux
