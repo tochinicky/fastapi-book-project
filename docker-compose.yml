@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  fastapi:
+    build:
+      dockerfile: fastapi/Dockerfile
+    container_name: fastapi-container
+    ports:
+      - "8000:8000"
+
+  nginx:
+    build:
+      dockerfile: nginx/Dockerfile
+    container_name: nginx-container
+    ports:
+      - "80:80"
+    depends_on:
+      - fastapi
