@@ -40,7 +40,7 @@
       },
       "imageRegistryCredentials": [
         {
-         "server": "$ACR_NAME.azurecr.io",
+         "server": "$ACR_NAME",
          "username": "$ACR_USERNAME",
          "password": "$ACR_PASSWORD"
         }
