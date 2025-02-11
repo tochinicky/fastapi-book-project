@@ -1,4 +1,4 @@
-name: Deploy FastAPI + Nginx to Azure Container Instances
+name: Deploy FastAPI + Nginx to Azure App Service
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
       - main
 
 env:
-  ACI_GROUP_NAME: fastapi-nginx-group
+  WEBAPP_NAME: fastapi-nginx-app
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
 
 jobs:
   deploy:
@@ -25,7 +26,7 @@ jobs:
         run: |
           az acr login --name ${{ secrets.ACR_NAME }}
 
-      - name: Build and Push FastAPI Book Image
+      - name: Build and Push FastAPI Image
         run: |
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest -f fastapi/Dockerfile .
           docker push ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest
@@ -35,17 +36,26 @@ jobs:
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest -f nginx/Dockerfile .
           docker push ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest
 
-      - name: Replace placeholders in JSON file
+      - name: Create Azure App Service Plan (If Not Exists)
         run: |
-          sed -i "s|ACR_NAME_PLACEHOLDER|${{ secrets.ACR_NAME }}|g" deployment/container-group.json
-          sed -i "s|ACR_USERNAME_PLACEHOLDER|${{ secrets.ACR_USERNAME }}|g" deployment/container-group.json
-          sed -i "s|ACR_PASSWORD_PLACEHOLDER|${{ secrets.ACR_PASSWORD }}|g" deployment/container-group.json
+          az appservice plan create --name hngAppPlan \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --sku B1 --is-linux || true
 
-      - name: Deploy to Azure Container Instances
+      - name: Deploy FastAPI App Service
         run: |
-          az container create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --file deployment/container-group.json
+          az webapp create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --plan hngAppPlan \
+            --name $WEBAPP_NAME-fastapi \
+            --deployment-container-image-name ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest
+
+      - name: Deploy Nginx App Service
+        run: |
+          az webapp create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --plan hngAppPlan \
+            --name $WEBAPP_NAME-nginx \
+            --deployment-container-image-name ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest
 
       - name: Verify Deployment
         run: |
-          az container show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name $ACI_GROUP_NAME --query "instanceView.state" -o tsv
+          az webapp show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name $WEBAPP_NAME-nginx --query "defaultHostName" -o tsv
