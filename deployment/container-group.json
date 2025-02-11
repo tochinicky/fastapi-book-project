@@ -40,9 +40,9 @@
       },
       "imageRegistryCredentials": [
         {
-         "server": "$ACR_NAME",
-         "username": "$ACR_USERNAME",
-         "password": "$ACR_PASSWORD"
+         "server": "${{ secrets.ACR_NAME }}.azurecr.io",
+         "username": "${{ secrets.ACR_USERNAME }}",
+         "password": "${{ secrets.ACR_PASSWORD }}"
         }
       ],
       "restartPolicy": "Always"
