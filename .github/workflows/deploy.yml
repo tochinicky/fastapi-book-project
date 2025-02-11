@@ -51,6 +51,13 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
+            # Ensure Docker service is running and enabled
+            sudo systemctl start docker
+            sudo systemctl enable docker
+
+            # Verify Docker is running
+            sudo docker ps
+
             # Add the SSH user to the Docker group
             sudo usermod -aG docker ${{ secrets.AZURE_VM_USERNAME }}
 
@@ -63,11 +70,11 @@ jobs:
             docker-compose --version
             sudo docker pull ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest
             sudo docker pull ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest
-            git clone https://github.com/tochinicky/fastapi-book-project
-            cd fastapi-book-project/
+            cd fastapi-book-project || git clone https://github.com/tochinicky/fastapi-book-project && cd fastapi-book-project
             git pull
-            docker-compose up -d --build
+            sudo docker-compose up -d --build
 
       - name: Verify Deployment
         run: |
+          sleep 10  # Give containers time to start
           curl -I http://${{ secrets.AZURE_VM_IP }}
