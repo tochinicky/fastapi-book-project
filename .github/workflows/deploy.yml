@@ -3,7 +3,7 @@ name: Deploy FastAPI + Nginx to Azure Container Instances
 on:
   push:
     branches:
-      - main  # Run workflow when code is pushed to the main branch
+      - main # Run workflow when code is pushed to the main branch
 
 env:
   ACI_GROUP_NAME: fastapi-nginx-group
@@ -15,48 +15,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Log in to Azure
-      run: |
-        az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-        az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Log in to Azure
+        run: |
+          az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Log in to Azure Container Registry (ACR)
-      run: |
-        az acr login --name ${{ secrets.ACR_NAME }}
+      - name: Log in to Azure Container Registry (ACR)
+        run: |
+          az acr login --name ${{ secrets.ACR_NAME }}
 
-    - name: Build and Push FastAPI Book Image
-      run: |
-        docker build -t $FASTAPI_IMAGE -f fastapi/Dockerfile .
-        docker push $FASTAPI_IMAGE
+      - name: Build and Push FastAPI Book Image
+        run: |
+          docker build -t $FASTAPI_IMAGE -f fastapi/Dockerfile .
+          docker push $FASTAPI_IMAGE
 
-    - name: Build and Push Nginx Image
-      run: |
-        docker build -t $NGINX_IMAGE -f nginx/Dockerfile .
-        docker push $NGINX_IMAGE
+      - name: Build and Push Nginx Image
+        run: |
+          docker build -t $NGINX_IMAGE -f nginx/Dockerfile .
+          docker push $NGINX_IMAGE
 
-    - name: Deploy to Azure Container Instances
-      run: |
-        az container create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-          --name $ACI_GROUP_NAME \
-          --image $FASTAPI_IMAGE \
-          --image $NGINX_IMAGE \
-          --cpu 1 --memory 1.5 \
-          --registry-login-server ${{ secrets.ACR_NAME }}.azurecr.io \
-          --registry-username ${{ secrets.ACR_USERNAME }} \
-          --registry-password ${{ secrets.ACR_PASSWORD }} \
-          --dns-name-label fastapi-nginx \
-          --ports 80 8000 \
-          --os-type Linux \
-          --ip-address Public \
-          --restart-policy Always \
-          --azure-file-volume-account-name ${{ secrets.STORAGE_ACCOUNT_NAME }} \
-          --azure-file-volume-account-key ${{ secrets.STORAGE_ACCOUNT_KEY }} \
-          --azure-file-volume-share-name ${{ secrets.STORAGE_SHARE_NAME }} \
-          --azure-file-volume-mount-path /mnt/azure
+      - name: Deploy to Azure Container Instances
+        run: |
+          az container create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name $ACI_GROUP_NAME \
+            --cpu 1 --memory 1.5 \
+            --registry-login-server ${{ secrets.ACR_NAME }}.azurecr.io \
+            --registry-username ${{ secrets.ACR_USERNAME }} \
+            --registry-password ${{ secrets.ACR_PASSWORD }} \
+            --dns-name-label fastapi-nginx \
+            --ports 80 8000 \
+            --os-type Linux \
+            --ip-address Public \
+            --restart-policy Always \
+            --azure-file-volume-account-name ${{ secrets.STORAGE_ACCOUNT_NAME }} \
+            --azure-file-volume-account-key ${{ secrets.STORAGE_ACCOUNT_KEY }} \
+            --azure-file-volume-share-name ${{ secrets.STORAGE_SHARE_NAME }} \
+            --azure-file-volume-mount-path /mnt/azure
+            --environment-variables "API_HOST=http://fastapi:8000" \
+            --container-name fastapi-container \
+            --image $FASTAPI_IMAGE \
+            --container-name nginx-container
+            --image $NGINX_IMAGE
 
-    - name: Verify Deployment
-      run: |
-        az container show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name $ACI_GROUP_NAME --query "instanceView.state" -o tsv
+      - name: Verify Deployment
+        run: |
+          az container show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name $ACI_GROUP_NAME --query "instanceView.state" -o tsv
