@@ -1,20 +1,16 @@
-name: Deploy FastAPI + Nginx to Azure App Service
+name: CI/CD to Azure VM
 
 on:
   push:
     branches:
       - main
 
-env:
-  WEBAPP_NAME: fastapi-nginx-app
-  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Log in to Azure
@@ -22,40 +18,34 @@ jobs:
           az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Log in to Azure Container Registry (ACR)
+      - name: Log in to ACR
         run: |
           az acr login --name ${{ secrets.ACR_NAME }}
 
-      - name: Build and Push FastAPI Image
+      - name: Build and Push FastAPI Docker Image
         run: |
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest -f fastapi/Dockerfile .
           docker push ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest
 
-      - name: Build and Push Nginx Image
+      - name: Build and Push Nginx Docker Image
         run: |
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest -f nginx/Dockerfile .
           docker push ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest
 
-      - name: Create Azure App Service Plan (If Not Exists)
-        run: |
-          az appservice plan create --name hngAppPlan \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --sku B1 --is-linux || true
-
-      - name: Deploy FastAPI App Service
-        run: |
-          az webapp create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --plan hngAppPlan \
-            --name $WEBAPP_NAME-fastapi \
-            --deployment-container-image-name ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest
-
-      - name: Deploy Nginx App Service
-        run: |
-          az webapp create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --plan hngAppPlan \
-            --name $WEBAPP_NAME-nginx \
-            --deployment-container-image-name ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest
+      - name: SSH into VM and Deploy Containers
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AZURE_VM_IP }}
+          username: ${{ secrets.AZURE_VM_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo docker pull ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest
+            sudo docker pull ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest
+            git clone https://github.com/tochinicky/fastapi-book-project
+            cd fastapi-book-project/
+            git pull
+            docker-compose up -d --build
 
       - name: Verify Deployment
         run: |
-          az webapp show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name $WEBAPP_NAME-nginx --query "defaultHostName" -o tsv
+          curl -I http://${{ secrets.AZURE_VM_IP }}
