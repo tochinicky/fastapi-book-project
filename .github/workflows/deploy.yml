@@ -3,12 +3,10 @@ name: Deploy FastAPI + Nginx to Azure Container Instances
 on:
   push:
     branches:
-      - main # Run workflow when code is pushed to the main branch
+      - main
 
 env:
   ACI_GROUP_NAME: fastapi-nginx-group
-  FASTAPI_IMAGE: ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest
-  NGINX_IMAGE: ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest
 
 jobs:
   deploy:
@@ -29,19 +27,19 @@ jobs:
 
       - name: Build and Push FastAPI Book Image
         run: |
-          docker build -t $FASTAPI_IMAGE -f fastapi/Dockerfile .
-          docker push $FASTAPI_IMAGE
+          docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest -f fastapi/Dockerfile .
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest
 
       - name: Build and Push Nginx Image
         run: |
-          docker build -t $NGINX_IMAGE -f nginx/Dockerfile .
-          docker push $NGINX_IMAGE
+          docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest -f nginx/Dockerfile .
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest
 
       - name: Replace placeholders in JSON file
         run: |
-          sed -i "s|ACR_NAME.azurecr.io|${{ secrets.ACR_NAME }}.azurecr.io|g" deployment/container-group.json
-          sed -i "s|ACR_USERNAME|${{ secrets.ACR_USERNAME }}|g" deployment/container-group.json
-          sed -i "s|ACR_PASSWORD|${{ secrets.ACR_PASSWORD }}|g" deployment/container-group.json
+          sed -i "s|ACR_NAME_PLACEHOLDER|${{ secrets.ACR_NAME }}|g" deployment/container-group.json
+          sed -i "s|ACR_USERNAME_PLACEHOLDER|${{ secrets.ACR_USERNAME }}|g" deployment/container-group.json
+          sed -i "s|ACR_PASSWORD_PLACEHOLDER|${{ secrets.ACR_PASSWORD }}|g" deployment/container-group.json
 
       - name: Deploy to Azure Container Instances
         run: |
@@ -51,7 +49,3 @@ jobs:
       - name: Verify Deployment
         run: |
           az container show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name $ACI_GROUP_NAME --query "instanceView.state" -o tsv
-        env:
-          ACR_NAME: ${{ secrets.ACR_NAME }}
-          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
-          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}

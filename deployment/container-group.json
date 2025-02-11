@@ -5,7 +5,7 @@
         {
           "name": "fastapi-container",
           "properties": {
-            "image": "${{ secrets.ACR_NAME }}.azurecr.io/fastapi-app:latest",
+            "image": "ACR_NAME_PLACEHOLDER.azurecr.io/fastapi-app:latest",
             "resources": {
               "requests": {
                 "cpu": 1,
@@ -18,7 +18,7 @@
         {
           "name": "nginx-container",
           "properties": {
-            "image": "${{ secrets.ACR_NAME }}.azurecr.io/nginx-proxy:latest",
+            "image": "ACR_NAME_PLACEHOLDER.azurecr.io/nginx-proxy:latest",
             "resources": {
               "requests": {
                 "cpu": 0.5,
@@ -40,9 +40,9 @@
       },
       "imageRegistryCredentials": [
         {
-         "server": "${{ secrets.ACR_NAME }}.azurecr.io",
-         "username": "${{ secrets.ACR_USERNAME }}",
-         "password": "${{ secrets.ACR_PASSWORD }}"
+         "server": "ACR_NAME_PLACEHOLDER.azurecr.io",
+         "username": "ACR_USERNAME_PLACEHOLDER",
+         "password": "ACR_PASSWORD_PLACEHOLDER"
         }
       ],
       "restartPolicy": "Always"
