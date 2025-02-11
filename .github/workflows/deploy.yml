@@ -39,15 +39,18 @@ jobs:
 
       - name: Replace placeholders in JSON file
         run: |
-          sed -i 's|ACR_NAME.azurecr.io|${{ secrets.ACR_NAME }}.azurecr.io|g' deployment/container-group.json
-          sed -i 's|ACR_USERNAME|${{ secrets.ACR_USERNAME }}|g' deployment/container-group.json
-          sed -i 's|ACR_PASSWORD|${{ secrets.ACR_PASSWORD }}|g' deployment/container-group.json
+          envsubst < deployment/container-group.json > container-group-processed.json
+          cat container-group-processed.json  # Debugging: Verify values
 
       - name: Deploy to Azure Container Instances
         run: |
           az container create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --file deployment/container-group.json
+            --file container-group-processed.json
 
       - name: Verify Deployment
         run: |
           az container show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name $ACI_GROUP_NAME --query "instanceView.state" -o tsv
+        env:
+          ACR_NAME: ${{ secrets.ACR_NAME }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
