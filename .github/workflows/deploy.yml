@@ -39,7 +39,7 @@ jobs:
 
       - name: Replace placeholders in JSON file
         run: |
-          sed -i 's|ACR_NAME|${{ secrets.ACR_NAME }}|g' deployment/container-group.json
+          sed -i 's|ACR_NAME.azurecr.io|${{ secrets.ACR_NAME }}.azurecr.io|g' deployment/container-group.json
           sed -i 's|ACR_USERNAME|${{ secrets.ACR_USERNAME }}|g' deployment/container-group.json
           sed -i 's|ACR_PASSWORD|${{ secrets.ACR_PASSWORD }}|g' deployment/container-group.json
 
