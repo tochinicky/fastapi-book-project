@@ -3,19 +3,6 @@
     "properties": {
       "containers": [
         {
-          "name": "fastapi-container",
-          "properties": {
-            "image": "ACR_NAME_PLACEHOLDER.azurecr.io/fastapi-app:latest",
-            "resources": {
-              "requests": {
-                "cpu": 1,
-                "memoryInGB": 1.5
-              }
-            },
-            "ports": [{ "protocol": "TCP", "port": 8000 }]
-          }
-        },
-        {
           "name": "nginx-container",
           "properties": {
             "image": "ACR_NAME_PLACEHOLDER.azurecr.io/nginx-proxy:latest",
@@ -26,6 +13,19 @@
               }
             },
             "ports": [{ "protocol": "TCP", "port": 80 }]
+          }
+        },
+        {
+          "name": "fastapi-container",
+          "properties": {
+            "image": "ACR_NAME_PLACEHOLDER.azurecr.io/fastapi-app:latest",
+            "resources": {
+              "requests": {
+                "cpu": 1,
+                "memoryInGB": 1.5
+              }
+            },
+            "ports": [{ "protocol": "TCP", "port": 8000 }]
           }
         }
       ],
