@@ -40,25 +40,7 @@ jobs:
       - name: Deploy to Azure Container Instances
         run: |
           az container create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --name $ACI_GROUP_NAME \
-            --cpu 1 --memory 1.5 \
-            --registry-login-server ${{ secrets.ACR_NAME }}.azurecr.io \
-            --registry-username ${{ secrets.ACR_USERNAME }} \
-            --registry-password ${{ secrets.ACR_PASSWORD }} \
-            --dns-name-label fastapi-nginx \
-            --ports 80 8000 \
-            --os-type Linux \
-            --ip-address Public \
-            --restart-policy Always \
-            --azure-file-volume-account-name ${{ secrets.STORAGE_ACCOUNT_NAME }} \
-            --azure-file-volume-account-key ${{ secrets.STORAGE_ACCOUNT_KEY }} \
-            --azure-file-volume-share-name ${{ secrets.STORAGE_SHARE_NAME }} \
-            --azure-file-volume-mount-path /mnt/azure
-            --environment-variables "API_HOST=http://fastapi:8000" \
-            --container-name fastapi-container \
-            --image $FASTAPI_IMAGE \
-            --container-name nginx-container
-            --image $NGINX_IMAGE
+           --file container-group.json
 
       - name: Verify Deployment
         run: |
